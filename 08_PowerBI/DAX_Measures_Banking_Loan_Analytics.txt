@@ -1,0 +1,85 @@
+-- Power BI DAX Measures
+-- Table: banking_loan_applications
+
+Total Applications =
+DISTINCTCOUNT(banking_loan_applications[application_id])
+
+Approved Applications =
+CALCULATE(
+    [Total Applications],
+    banking_loan_applications[decision_status] = "Approved"
+)
+
+Rejected Applications =
+CALCULATE(
+    [Total Applications],
+    banking_loan_applications[decision_status] = "Rejected"
+)
+
+Pending Applications =
+CALCULATE(
+    [Total Applications],
+    banking_loan_applications[decision_status] = "Pending"
+)
+
+Withdrawn Applications =
+CALCULATE(
+    [Total Applications],
+    banking_loan_applications[decision_status] = "Withdrawn"
+)
+
+Eligible Decided Applications =
+CALCULATE(
+    [Total Applications],
+    banking_loan_applications[decision_status] IN {"Approved","Rejected"}
+)
+
+Approval Rate =
+DIVIDE(
+    [Approved Applications],
+    [Eligible Decided Applications],
+    0
+)
+
+Rejection Rate =
+DIVIDE(
+    [Rejected Applications],
+    [Eligible Decided Applications],
+    0
+)
+
+Pending Rate =
+DIVIDE(
+    [Pending Applications],
+    [Total Applications],
+    0
+)
+
+Average Processing Days =
+AVERAGE(banking_loan_applications[processing_days])
+
+Median Processing Days =
+MEDIAN(banking_loan_applications[processing_days])
+
+Average Requested Amount =
+AVERAGE(banking_loan_applications[requested_amount])
+
+Total Requested Amount =
+SUM(banking_loan_applications[requested_amount])
+
+Data Quality Exceptions =
+CALCULATE(
+    [Total Applications],
+    banking_loan_applications[documents_complete] = "No"
+)
+
+-- Optional calculated column
+Processing Bucket =
+SWITCH(
+    TRUE(),
+    ISBLANK(banking_loan_applications[processing_days]), "Pending / No Decision",
+    banking_loan_applications[processing_days] <= 3, "0-3 Days",
+    banking_loan_applications[processing_days] <= 7, "4-7 Days",
+    banking_loan_applications[processing_days] <= 15, "8-15 Days",
+    "16+ Days"
+)
